@@ -3,18 +3,17 @@ import os
 import json
 import requests
 
-### Setup environment
+### Setup environment - These are fairly static and could also be hard-coded
 VAULT_URL = os.getenv('VAULT_URL')
 LOGIN_URL = os.getenv('IICS_LOGIN_URL')
-POD_URL =  os.getenv('IICS_POD_URL')
 
 ### Could be parameterized in the future for reuse
 SECRET_PATH = "bq"
 SECRET_NAME = "bq_credentials"
 CONNECTION_NAME = "google_de_bigquery_public_data"
-TARGET_FIELD = "privateKey"
+TARGET_FIELD = "privateKey" #Different connectors will have a different spot to place their secret
 
-### Create connection to vault
+### Create connection to vault - Using Vault, but there's a lot of options here for Auth
 client = hvac.Client(
     url=VAULT_URL,
     token=os.getenv('VAULT_TOKEN'),
@@ -43,6 +42,7 @@ infa_pass = infa_credentials['data']['data']['password']
 BODY = {"username": infa_user,"password": infa_pass}
 login = requests.post(url = LOGIN_URL, json = BODY)
 login_json = login.json()
+POD_URL = login_json['products'][0]['baseApiUrl'] ### This assumes the provided account has only 1 associated org
 
 ### Get connection ID
 HEADERS_V2 = {"Content-Type": "application/json; charset=utf-8", "icSessionId":login_json['userInfo']['sessionId']}
